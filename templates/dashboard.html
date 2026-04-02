@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard — SRA Tracker</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--surface:#161b22;--border:#21262d;--accent:#00d4aa;--text:#e6edf3;--muted:#7d8590;--pending:#f0a500;--awaiting:#58a6ff;--complete:#00d4aa;--overdue:#ff4444;}
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-title{font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:600;color:var(--accent);}
+  .topbar-title span{color:var(--muted);}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .user-badge{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--muted);}
+  .user-badge strong{color:var(--text);}
+  .btn-sm{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 12px;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;cursor:pointer;text-decoration:none;display:inline-block;transition:all .15s;}
+  .btn-sm:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-new{background:var(--accent);color:#0d1117;border:none;padding:7px 16px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;transition:opacity .15s;}
+  .btn-new:hover{opacity:.85;color:#0d1117;}
+  .stats-bar{display:flex;gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+  .stat-box{background:var(--surface);padding:16px 24px;flex:1;}
+  .stat-label{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:'IBM Plex Mono',monospace;}
+  .stat-value{font-size:1.7rem;font-weight:600;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .main{padding:24px 28px;}
+
+  /* Analyst Summary Cards - Manager Only */
+  .analyst-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:24px;}
+  .analyst-card{background:var(--surface);border:1px solid var(--border);padding:14px 16px;}
+  .analyst-name{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;font-weight:600;margin-bottom:10px;color:var(--text);}
+  .analyst-stats{display:flex;gap:12px;}
+  .a-stat{text-align:center;}
+  .a-stat-val{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;font-weight:600;}
+  .a-stat-lbl{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--muted);text-transform:uppercase;}
+
+  /* Filters */
+  .filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .filter-input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 12px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;min-width:180px;}
+  .filter-input:focus{outline:none;border-color:var(--accent);}
+  .filter-input::placeholder{color:var(--muted);}
+  .filter-select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 12px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;}
+  .filter-select:focus{outline:none;border-color:var(--accent);}
+  .filter-select option{background:var(--surface);}
+  .btn-filter{background:var(--accent);color:#0d1117;border:none;padding:7px 14px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:600;cursor:pointer;}
+  .btn-clear{background:none;border:1px solid var(--border);color:var(--muted);padding:7px 12px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;cursor:pointer;text-decoration:none;display:inline-block;}
+  .btn-clear:hover{border-color:var(--overdue);color:var(--overdue);}
+
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;}
+  .vendor-card{background:var(--surface);border:1px solid var(--border);margin-bottom:6px;transition:border-color .15s;text-decoration:none;display:block;color:var(--text);}
+  .vendor-card:hover{border-color:var(--accent);color:var(--text);}
+  .vendor-card.overdue{border-left:3px solid var(--overdue);}
+  .vendor-card-inner{padding:13px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .vendor-name{font-weight:600;font-size:0.9rem;min-width:130px;}
+  .vendor-assignee{font-size:0.75rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;min-width:90px;}
+  .vendor-email{font-size:0.75rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;flex:1;}
+  .deadline-badge{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;white-space:nowrap;}
+  .deadline-badge.overdue{color:var(--overdue);}
+  .deadline-badge.ok{color:var(--muted);}
+  .doc-pips{display:flex;gap:3px;}
+  .pip{width:7px;height:7px;border-radius:50%;}
+  .pip.on{background:var(--accent);}
+  .pip.off{background:var(--border);}
+  .doc-count{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--muted);}
+  .status-badge{font-family:'IBM Plex Mono',monospace;font-size:0.67rem;font-weight:600;padding:3px 8px;white-space:nowrap;}
+  .s-Pending{background:rgba(240,165,0,.15);color:var(--pending);border:1px solid rgba(240,165,0,.3);}
+  .s-Awaiting{background:rgba(88,166,255,.15);color:var(--awaiting);border:1px solid rgba(88,166,255,.3);}
+  .s-In{background:rgba(255,107,53,.15);color:#ff6b35;border:1px solid rgba(255,107,53,.3);}
+  .s-Complete{background:rgba(0,212,170,.15);color:var(--complete);border:1px solid rgba(0,212,170,.3);}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-state p{font-family:'IBM Plex Mono',monospace;font-size:0.85rem;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">SRA<span>//</span>TRACKER</div>
+  <div class="topbar-right">
+    <div class="user-badge">Logged in as <strong>{{ user }}</strong>{% if is_manager %} <span style="color:var(--accent)">[MANAGER]</span>{% endif %}</div>
+    {% if is_manager %}<a href="/new" class="btn-new">+ NEW SRA</a>{% endif %}
+    <a href="/logout" class="btn-sm">Logout</a>
+  </div>
+</div>
+
+{% set total = vendor_data|length %}
+{% set complete = vendor_data|selectattr('vendor.status', 'equalto', 'Complete')|list|length %}
+{% set overdue_count = vendor_data|selectattr('overdue')|list|length %}
+{% set pending = vendor_data|selectattr('vendor.status', 'equalto', 'Pending')|list|length %}
+
+<div class="stats-bar">
+  <div class="stat-box"><div class="stat-label">Total SRAs</div><div class="stat-value" style="color:var(--text)">{{ total }}</div></div>
+  <div class="stat-box"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--pending)">{{ pending }}</div></div>
+  <div class="stat-box"><div class="stat-label">Complete</div><div class="stat-value" style="color:var(--complete)">{{ complete }}</div></div>
+  <div class="stat-box"><div class="stat-label">Overdue</div><div class="stat-value" style="color:var(--overdue)">{{ overdue_count }}</div></div>
+</div>
+
+<div class="main">
+
+  {% if is_manager and analyst_stats %}
+  <div class="section-label">Team Workload</div>
+  <div class="analyst-grid" style="margin-bottom:28px;">
+    {% for a in analyst_stats %}
+    <div class="analyst-card">
+      <div class="analyst-name">{{ a.name }}</div>
+      <div class="analyst-stats">
+        <div class="a-stat"><div class="a-stat-val" style="color:var(--text)">{{ a.total }}</div><div class="a-stat-lbl">Total</div></div>
+        <div class="a-stat"><div class="a-stat-val" style="color:#ff6b35">{{ a.active }}</div><div class="a-stat-lbl">Active</div></div>
+        <div class="a-stat"><div class="a-stat-val" style="color:var(--complete)">{{ a.complete }}</div><div class="a-stat-lbl">Done</div></div>
+        <div class="a-stat"><div class="a-stat-val" style="color:var(--overdue)">{{ a.overdue }}</div><div class="a-stat-lbl">Overdue</div></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Filters -->
+  <form method="GET" action="/dashboard">
+    <div class="filter-bar">
+      <input type="text" name="search" class="filter-input" placeholder="Search vendor name or email..." value="{{ search }}">
+      {% if is_manager %}
+      <select name="assignee" class="filter-select">
+        <option value="">All Analysts</option>
+        {% for a in analysts %}<option value="{{ a }}" {% if filter_assignee == a %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      </select>
+      {% endif %}
+      <select name="status" class="filter-select">
+        <option value="">All Statuses</option>
+        <option value="Pending" {% if filter_status == 'Pending' %}selected{% endif %}>Pending</option>
+        <option value="Awaiting Documents" {% if filter_status == 'Awaiting Documents' %}selected{% endif %}>Awaiting Documents</option>
+        <option value="In Progress" {% if filter_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+        <option value="Complete" {% if filter_status == 'Complete' %}selected{% endif %}>Complete</option>
+      </select>
+      <button type="submit" class="btn-filter">Search</button>
+      {% if search or filter_assignee or filter_status %}<a href="/dashboard" class="btn-clear">Clear</a>{% endif %}
+    </div>
+  </form>
+
+  <div class="section-label">{% if is_manager %}All Assessments{% else %}My Assigned SRAs{% endif %}</div>
+  {% if vendor_data %}
+    {% for item in vendor_data %}
+    <a href="/vendor/{{ item.vendor.id }}" class="vendor-card {% if item.overdue and item.vendor.status != 'Complete' %}overdue{% endif %}">
+      <div class="vendor-card-inner">
+        <div class="vendor-name">{{ item.vendor.name }}</div>
+        {% if is_manager %}<div class="vendor-assignee">→ {{ item.vendor.assigned_to or 'Unassigned' }}</div>{% endif %}
+        <div class="vendor-email">{{ item.vendor.contact_email or '—' }}</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="doc-pips">{% for i in range(item.docs_total) %}<div class="pip {% if i < item.docs_received %}on{% else %}off{% endif %}"></div>{% endfor %}</div>
+          <div class="doc-count">{{ item.docs_received }}/{{ item.docs_total }}</div>
+        </div>
+        {% if item.deadline %}
+        <div class="deadline-badge {% if item.overdue and item.vendor.status != 'Complete' %}overdue{% else %}ok{% endif %}">
+          {% if item.overdue and item.vendor.status != 'Complete' %}⚠ OVERDUE{% else %}due {{ item.deadline }}{% endif %}
+        </div>
+        {% endif %}
+        {% set s = item.vendor.status.split(' ')[0] %}
+        <div class="status-badge s-{{ s }}">{{ item.vendor.status }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state"><p>No SRAs found.</p></div>
+  {% endif %}
+</div>
+</body>
+</html>

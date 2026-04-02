@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>New SRA — SRA Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--surface:#161b22;--border:#21262d;--accent:#00d4aa;--text:#e6edf3;--muted:#7d8590;}
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-title{font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:600;color:var(--accent);}
+  .topbar-title span{color:var(--muted);}
+  .back-link{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted);text-decoration:none;}
+  .back-link:hover{color:var(--accent);}
+  .main{max-width:620px;margin:40px auto;padding:0 20px;}
+  h2{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;margin-bottom:24px;}
+  .section-divider{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:20px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  .field{margin-bottom:14px;}
+  .field-label{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+  .field input,.field select{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 12px;font-family:'IBM Plex Sans',sans-serif;font-size:0.875rem;}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--accent);}
+  .field select option{background:var(--surface);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  /* Tier selector */
+  .tier-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px;}
+  .tier-option{position:relative;}
+  .tier-option input[type=radio]{position:absolute;opacity:0;width:0;}
+  .tier-card{border:1px solid var(--border);padding:12px;cursor:pointer;transition:all .15s;background:var(--surface);}
+  .tier-option input[type=radio]:checked + .tier-card{border-color:var(--accent);background:rgba(0,212,170,.06);}
+  .tier-card:hover{border-color:var(--accent);}
+  .tier-letter{font-family:'IBM Plex Mono',monospace;font-size:1.3rem;font-weight:600;color:var(--accent);margin-bottom:4px;}
+  .tier-desc{font-size:0.75rem;color:var(--muted);line-height:1.4;}
+  .tier-docs-preview{font-size:0.7rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:6px;line-height:1.6;}
+
+  /* Doc preview */
+  .doc-preview{background:var(--surface);border:1px solid var(--border);padding:14px 16px;margin-top:14px;}
+  .doc-preview-title{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+  .doc-item{font-size:0.82rem;padding:3px 0;color:var(--muted);display:flex;gap:8px;align-items:center;}
+  .doc-item::before{content:'○';font-size:0.65rem;color:var(--border);}
+
+  /* Medical device toggle */
+  .toggle-row{display:flex;align-items:center;gap:12px;padding:10px 0;}
+  .toggle-label{font-size:0.875rem;}
+  .toggle-sub{font-size:0.78rem;color:var(--muted);}
+  input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);}
+
+  .btn-submit{width:100%;background:var(--accent);color:#0d1117;border:none;padding:11px;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:0.85rem;cursor:pointer;transition:opacity .15s;margin-top:8px;}
+  .btn-submit:hover{opacity:.85;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">SRA<span>//</span>TRACKER</div>
+  <a href="/dashboard" class="back-link">← Dashboard</a>
+</div>
+<div class="main">
+  <h2>New Security Risk Assessment</h2>
+  <form method="POST" id="sra-form">
+
+    <div class="section-divider">Vendor Info</div>
+    <div class="field"><div class="field-label">Vendor Name *</div><input type="text" name="name" required placeholder="e.g. Acme Health Systems"></div>
+    <div class="grid2">
+      <div class="field"><div class="field-label">Vendor Contact Email</div><input type="email" name="email" placeholder="vendor@example.com"></div>
+      <div class="field"><div class="field-label">Vendor Contact Name</div><input type="text" name="vendor_contact" placeholder="e.g. John Smith"></div>
+    </div>
+
+    <div class="section-divider">Tier Classification</div>
+    <div class="tier-grid">
+      <label class="tier-option">
+        <input type="radio" name="tier" value="A" checked onchange="updateDocs()">
+        <div class="tier-card">
+          <div class="tier-letter">A</div>
+          <div class="tier-desc">SaaS / Third Party with PHI, PII, or PCI</div>
+        </div>
+      </label>
+      <label class="tier-option">
+        <input type="radio" name="tier" value="B" onchange="updateDocs()">
+        <div class="tier-card">
+          <div class="tier-letter">B</div>
+          <div class="tier-desc">UMMH On-Prem with PHI, PII, or PCI</div>
+        </div>
+      </label>
+      <label class="tier-option">
+        <input type="radio" name="tier" value="C" onchange="updateDocs()">
+        <div class="tier-card">
+          <div class="tier-letter">C</div>
+          <div class="tier-desc">No regulated data involved</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <input type="checkbox" name="medical_device" id="medical_device" onchange="updateDocs()">
+      <div>
+        <div class="toggle-label">Medical device involved</div>
+        <div class="toggle-sub">Adds MDS2 to required documents</div>
+      </div>
+    </div>
+
+    <div class="doc-preview">
+      <div class="doc-preview-title">Documents that will be requested</div>
+      <div id="doc-list"></div>
+    </div>
+
+    <div class="section-divider">Internal Assignment</div>
+    <div class="field">
+      <div class="field-label">Assign To *</div>
+      <select name="assigned_to" required>
+        <option value="">Select analyst...</option>
+        {% for a in analysts %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="grid2">
+      <div class="field"><div class="field-label">Owner</div><input type="text" name="owner" placeholder="SRA owner"></div>
+      <div class="field"><div class="field-label">Business Owner</div><input type="text" name="business_owner" placeholder="Business owner"></div>
+    </div>
+    <div class="field"><div class="field-label">Support Group</div><input type="text" name="support_group" placeholder="e.g. Security Operations"></div>
+
+    <button type="submit" class="btn-submit">CREATE & ASSIGN SRA →</button>
+  </form>
+</div>
+
+<script>
+const tierDocs = {
+  A: ['Vendor Technical Questionnaire','SOC2 Type II or HITRUST Full Report','HIPAA Risk Assessment','Network/Data Flow Diagram','Independent Vulnerability Assessment'],
+  B: ['Vendor Technical Questionnaire','Network/Data Flow Diagram'],
+  C: ['Vendor Technical Questionnaire','Network/Data Flow Diagram'],
+};
+function updateDocs() {
+  const tier = document.querySelector('input[name=tier]:checked').value;
+  const medical = document.getElementById('medical_device').checked;
+  let docs = [...tierDocs[tier]];
+  if (medical) docs.push('MDS2 (Medical Device)');
+  const list = document.getElementById('doc-list');
+  list.innerHTML = docs.map(d => `<div class="doc-item">${d}</div>`).join('');
+}
+updateDocs();
+</script>
+</body>
+</html>

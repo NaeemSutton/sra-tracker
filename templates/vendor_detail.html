@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{ vendor.name }} — SRA Tracker</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--surface:#161b22;--border:#21262d;--accent:#00d4aa;--text:#e6edf3;--muted:#7d8590;--overdue:#ff4444;--review:#a371f7;}
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-title{font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:600;color:var(--accent);}
+  .topbar-title span{color:var(--muted);}
+  .back-link{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--muted);text-decoration:none;}
+  .back-link:hover{color:var(--accent);}
+  .main{max-width:960px;margin:0 auto;padding:24px 20px;}
+  .vendor-header{margin-bottom:20px;}
+  .vendor-header h1{font-family:'IBM Plex Mono',monospace;font-size:1.35rem;margin-bottom:10px;}
+  .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:10px;}
+  .info-field{background:var(--surface);border:1px solid var(--border);padding:10px 14px;}
+  .info-label{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+  .info-value{font-size:0.84rem;color:var(--text);}
+  .banner{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .banner.overdue{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);color:var(--overdue);}
+  .banner.review{background:rgba(163,113,247,.1);border:1px solid rgba(163,113,247,.3);color:var(--review);}
+  .banner.docs-ready{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);color:var(--accent);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .full{grid-column:1/-1;}
+  .panel{background:var(--surface);border:1px solid var(--border);padding:16px;}
+  .panel-title{font-family:'IBM Plex Mono',monospace;font-size:0.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
+  .doc-row{padding:10px 0;border-bottom:1px solid var(--border);}
+  .doc-row:last-child{border-bottom:none;}
+  .doc-top{display:flex;align-items:center;gap:10px;}
+  .doc-name{flex:1;font-size:0.855rem;}
+  .doc-date{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--muted);}
+  .check-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.67rem;cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .check-btn.received{border-color:var(--accent);color:var(--accent);background:rgba(0,212,170,.08);}
+  .check-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .doc-comment-form{margin-top:6px;display:flex;gap:6px;}
+  .doc-comment-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 9px;font-family:'IBM Plex Sans',sans-serif;font-size:0.78rem;}
+  .doc-comment-input:focus{outline:none;border-color:var(--accent);}
+  .doc-comment-input::placeholder{color:var(--muted);}
+  .doc-comment-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.67rem;cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .doc-comment-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .doc-comment-existing{font-size:0.78rem;color:#58a6ff;font-style:italic;margin-top:4px;}
+  .email-box{background:var(--bg);border:1px solid var(--border);padding:13px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;line-height:1.7;color:var(--muted);white-space:pre-wrap;margin-bottom:10px;max-height:190px;overflow-y:auto;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-copy{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 13px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;cursor:pointer;transition:all .15s;}
+  .btn-copy:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-action{background:var(--accent);color:#0d1117;border:none;padding:7px 13px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;font-weight:600;cursor:pointer;transition:opacity .15s;}
+  .btn-action:hover{opacity:.85;}
+  .btn-action-purple{background:var(--review);color:#fff;border:none;padding:7px 13px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;font-weight:600;cursor:pointer;transition:opacity .15s;}
+  .btn-action-purple:hover{opacity:.85;}
+  .btn-danger{background:none;border:1px solid #ff4444;color:#ff4444;padding:6px 13px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;cursor:pointer;transition:all .15s;}
+  .btn-danger:hover{background:#ff4444;color:#fff;}
+  .btn-complete{background:none;border:1px solid var(--accent);color:var(--accent);padding:6px 13px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;cursor:pointer;transition:all .15s;}
+  .btn-complete:hover{background:var(--accent);color:#0d1117;}
+  .note-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:0.875rem;padding:9px 12px;resize:vertical;min-height:72px;margin-bottom:8px;}
+  .note-input:focus{outline:none;border-color:var(--accent);}
+  .note-item{padding:9px 0;border-bottom:1px solid var(--border);}
+  .note-item:last-child{border-bottom:none;}
+  .note-meta{font-family:'IBM Plex Mono',monospace;font-size:0.67rem;color:var(--muted);margin-bottom:3px;}
+  .note-meta strong{color:var(--text);}
+  .note-text{font-size:0.855rem;line-height:1.5;}
+  .note-revision{color:var(--review);}
+  .tab-row{display:flex;gap:1px;background:var(--border);}
+  .tab{background:var(--surface);padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;cursor:pointer;color:var(--muted);border:none;transition:all .15s;}
+  .tab.active{background:var(--bg);color:var(--accent);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;padding-top:12px;}
+  .sent-badge{font-family:'IBM Plex Mono',monospace;font-size:0.67rem;color:var(--accent);padding:3px 7px;border:1px solid rgba(0,212,170,.3);background:rgba(0,212,170,.08);}
+  .reassign-row{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+  .reassign-select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.73rem;flex:1;}
+  .reassign-select:focus{outline:none;border-color:var(--accent);}
+  .manager-actions{margin-top:18px;display:flex;gap:10px;justify-content:flex-end;}
+  .revision-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'IBM Plex Sans',sans-serif;font-size:0.855rem;margin-bottom:8px;}
+  .revision-input:focus{outline:none;border-color:var(--review);}
+  .revision-input::placeholder{color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">SRA<span>//</span>TRACKER</div>
+  <a href="/dashboard" class="back-link">← Dashboard</a>
+</div>
+<div class="main">
+  <div class="vendor-header">
+    <h1>{{ vendor.name }}</h1>
+    <div class="info-grid">
+      <div class="info-field"><div class="info-label">Assigned To</div><div class="info-value">{{ vendor.assigned_to or '—' }}</div></div>
+      <div class="info-field"><div class="info-label">Owner</div><div class="info-value">{{ vendor.owner or '—' }}</div></div>
+      <div class="info-field"><div class="info-label">Business Owner</div><div class="info-value">{{ vendor.business_owner or '—' }}</div></div>
+      <div class="info-field"><div class="info-label">Support Group</div><div class="info-value">{{ vendor.support_group or '—' }}</div></div>
+      <div class="info-field"><div class="info-label">Vendor Contact</div><div class="info-value">{{ vendor.vendor_contact or '—' }}</div></div>
+      <div class="info-field"><div class="info-label">Contact Email</div><div class="info-value">{{ vendor.contact_email or '—' }}</div></div>
+      <div class="info-field"><div class="info-label">Tier</div><div class="info-value" style="color:var(--accent)">{{ tier_label }</div></div><div class="info-field" style="grid-column:1/-1"><div class="info-label">Tier</div><div class="info-value" style="color:var(--accent)">{{ tier_label }}</div></div>
+      <div class="info-field"><div class="info-label">Status</div><div class="info-value" style="color:var(--accent)">{{ vendor.status }}</div></div>
+      <div class="info-field"><div class="info-label">Assigned Date</div><div class="info-value">{{ vendor.assigned_date }}</div></div>
+      {% if deadline %}
+      <div class="info-field" {% if overdue and vendor.status != 'Complete' %}style="border-color:var(--overdue)"{% endif %}>
+        <div class="info-label">Deadline</div>
+        <div class="info-value" {% if overdue and vendor.status != 'Complete' %}style="color:var(--overdue)"{% endif %}>{{ deadline }}{% if overdue and vendor.status != 'Complete' %} ⚠{% endif %}</div>
+      </div>
+      {% endif %}
+      {% if vendor.writeup_date %}
+      <div class="info-field"><div class="info-label">Write-Up Submitted</div><div class="info-value" style="color:var(--review)">{{ vendor.writeup_date }}</div></div>
+      {% endif %}
+    </div>
+
+    {% if overdue and vendor.status not in ('Complete', 'Pending Review') %}
+    <div class="banner overdue">⚠ This SRA is past its 3-day document deadline.</div>
+    {% endif %}
+
+    {% if vendor.status == 'Docs Received' and not vendor.writeup_submitted %}
+    <div class="banner docs-ready">
+      <span>✓ All documents received — ready to submit your write-up for manager review.</span>
+      <form method="POST" action="/vendor/{{ vendor.id }}/submit_writeup">
+        <button type="submit" class="btn-action">Submit Write-Up →</button>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if vendor.status == 'Pending Review' %}
+    <div class="banner review">
+      <span>📋 Write-up submitted on {{ vendor.writeup_date }} — awaiting manager review.</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="grid">
+    <!-- Documents -->
+    <div class="panel">
+      <div class="panel-title">Document Checklist</div>
+      {% for doc in docs %}
+      <div class="doc-row">
+        <div class="doc-top">
+          <div class="doc-name">{{ doc.doc_type }}</div>
+          {% if doc.received and doc.received_date %}<div class="doc-date">{{ doc.received_date }}</div>{% endif %}
+          <form method="POST" action="/vendor/{{ vendor.id }}/toggle_doc/{{ doc.id }}">
+            <button type="submit" class="check-btn {% if doc.received %}received{% endif %}">{% if doc.received %}✓ Received{% else %}Mark Received{% endif %}</button>
+          </form>
+        </div>
+        {% if doc.comment %}<div class="doc-comment-existing">💬 {{ doc.comment }}</div>{% endif %}
+        <div class="doc-comment-form">
+          <form method="POST" action="/vendor/{{ vendor.id }}/update_doc_comment/{{ doc.id }}" style="display:flex;gap:6px;width:100%">
+            <input type="text" name="comment" class="doc-comment-input" placeholder="Rejection reason, missing info..." value="{{ doc.comment or '' }}">
+            <button type="submit" class="doc-comment-btn">Save</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if is_manager %}
+      <div class="reassign-row">
+        <form method="POST" action="/vendor/{{ vendor.id }}/reassign" style="display:flex;gap:8px;flex:1;">
+          <select name="assigned_to" class="reassign-select">
+            {% for a in analysts %}<option value="{{ a }}" {% if a == vendor.assigned_to %}selected{% endif %}>{{ a }}</option>{% endfor %}
+          </select>
+          <button type="submit" class="btn-action">Reassign</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Emails -->
+    <div class="panel">
+      <div class="panel-title">Email Templates {% if vendor.outreach_sent %}<span class="sent-badge" style="margin-left:8px">OUTREACH SENT</span>{% endif %}</div>
+      <div class="tab-row">
+        <button class="tab active" onclick="showTab('outreach',this)">Initial Outreach</button>
+        {% if missing %}<button class="tab" onclick="showTab('followup',this)">Follow-Up</button>{% endif %}
+      </div>
+      <div id="outreach" class="tab-content active">
+        <div class="email-box" id="outreach-text">Good afternoon,
+
+Attached is the vendor technical questionnaire that needs to be filled out, and the SFTP questionnaire. Additionally, we need the following documents:
+
+  • Current SOC2 Type II full report OR HITRUST full report
+  • Current HIPAA Risk Assessment
+  • Data Flow Diagram
+  • Current Independent Vulnerability Assessment report
+  • MDS2 (only if a medical device is involved)
+
+Please provide these documents by end of day tomorrow. Thank you!</div>
+        <div class="btn-row">
+          <button class="btn-copy" onclick="copyText('outreach-text')">Copy Email</button>
+          {% if not vendor.outreach_sent %}
+          <form method="POST" action="/vendor/{{ vendor.id }}/mark_outreach"><button type="submit" class="btn-action">Mark as Sent</button></form>
+          {% endif %}
+        </div>
+      </div>
+      {% if missing %}
+      <div id="followup" class="tab-content">
+        <div class="email-box" id="followup-text">Good afternoon,
+
+Following up on our previous request. We are still missing the following documents to complete your Security Risk Assessment:
+
+{% for doc in missing %}  • {{ doc }}
+{% endfor %}
+Please provide these at your earliest convenience. Thank you!</div>
+        <button class="btn-copy" onclick="copyText('followup-text')">Copy Follow-Up</button>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Manager Review Panel -->
+    {% if is_manager and vendor.status == 'Pending Review' %}
+    <div class="panel full" style="border-color:var(--review);">
+      <div class="panel-title" style="color:var(--review);">Manager Review</div>
+      <p style="font-size:0.875rem;color:var(--muted);margin-bottom:16px;">{{ vendor.assigned_to }}'s write-up was submitted on {{ vendor.writeup_date }}. Review the notes below and either approve or request revisions.</p>
+      <div class="btn-row">
+        <form method="POST" action="/vendor/{{ vendor.id }}/complete">
+          <button type="submit" class="btn-complete">✓ Approve & Mark Complete</button>
+        </form>
+      </div>
+      <div style="margin-top:14px;">
+        <form method="POST" action="/vendor/{{ vendor.id }}/request_revision">
+          <input type="text" name="revision_note" class="revision-input" placeholder="Describe what needs to be revised...">
+          <button type="submit" class="btn-action-purple">Request Revision</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Notes -->
+    <div class="panel full">
+      <div class="panel-title">Notes / ServiceNow Log</div>
+      <form method="POST" action="/vendor/{{ vendor.id }}/add_note">
+        <textarea name="note" class="note-input" placeholder="Add a note — findings, risk ratings, follow-up items..."></textarea>
+        <button type="submit" class="btn-action">Add Note</button>
+      </form>
+      {% if notes %}
+      <div style="margin-top:14px;">
+        {% for note in notes %}
+        <div class="note-item">
+          <div class="note-meta"><strong>{{ note.author }}</strong> · {{ note.timestamp }}</div>
+          <div class="note-text {% if '[REVISION REQUESTED]' in note.note %}note-revision{% endif %}">{{ note.note }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="color:var(--muted);font-size:0.85rem;margin-top:14px;font-family:'IBM Plex Mono',monospace;">No notes yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if is_manager %}
+  <div class="manager-actions">
+    {% if vendor.status != 'Pending Review' %}
+    <form method="POST" action="/vendor/{{ vendor.id }}/complete"><button type="submit" class="btn-complete">✓ Mark Complete</button></form>
+    {% endif %}
+    <form method="POST" action="/vendor/{{ vendor.id }}/delete" onsubmit="return confirm('Delete this SRA?')"><button type="submit" class="btn-danger">Delete SRA</button></form>
+  </div>
+  {% endif %}
+</div>
+<script>
+function showTab(id,el){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById(id).classList.add('active');el.classList.add('active');}
+function copyText(id){navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>{const btn=event.target;const orig=btn.innerText;btn.innerText='Copied!';btn.style.color='var(--accent)';setTimeout(()=>{btn.innerText=orig;btn.style.color='';},1500);});}
+</script>
+</body>
+</html>
